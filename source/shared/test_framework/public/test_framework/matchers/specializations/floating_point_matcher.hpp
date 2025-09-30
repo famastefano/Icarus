@@ -26,12 +26,12 @@ namespace test_framework::matchers::specialization
 
         constexpr bool greater_than(T value)
         {
-            return std::isgreater(value, v);
+            return std::isgreater(v, value);
         }
 
         constexpr bool less_than(T value)
         {
-            return std::isless(value, v);
+            return std::isless(v, value);
         }
 
         constexpr bool is_signed()
@@ -83,10 +83,10 @@ namespace test_framework::matchers::specialization
 
         constexpr bool has_exact_integer_representation()
         {
-            if (!std::isfinite(x))
+            if (!std::isfinite(v))
                 return false;
 
-            const auto truncated = std::trunc(x);
+            const auto truncated = std::trunc(v);
             return truncated == v;
         }
 
@@ -111,7 +111,7 @@ namespace test_framework::matchers::specialization
         {
             T diff = v > value ? v - value : value - v;
             // relative error = N * epsilon * max(|a|, |b|)
-            T rel_error = ulpFactor * limits::epsilon() *
+            T rel_error = error * limits::epsilon() *
                           (std::fabs(v) > std::fabs(value) ? std::fabs(v) : std::fabs(value));
             return diff <= error;
         }

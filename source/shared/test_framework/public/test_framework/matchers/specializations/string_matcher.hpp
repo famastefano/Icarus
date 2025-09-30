@@ -38,7 +38,7 @@ namespace test_framework::matchers::specialization
 
         constexpr bool contains(view str)
         {
-            return view(s).find(str) != typename view::npos;
+            return view(s).find(str) != view::npos;
         }
     };
 }

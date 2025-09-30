@@ -136,7 +136,7 @@ namespace test_framework::matchers::specialization
             {
                 if (v == -1 && b == limits::min())
                     return true;
-                if (b == -1 && a == limits::min())
+                if (b == -1 && v == limits::min())
                     return true;
 
                 if (v > 0)
