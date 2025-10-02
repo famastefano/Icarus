@@ -2,11 +2,9 @@
 
 #include <cmath>
 
-namespace m = test_framework::matchers;
-
 float test_sqrt(float in)
 {
-    TEST_THAT(in, m::equals_to(0.f) || m::greater_than(0.f));
+    TEST_THAT(in, equals_to(0) || greater_than(0));
     if (in < 0)
         return NAN;
 

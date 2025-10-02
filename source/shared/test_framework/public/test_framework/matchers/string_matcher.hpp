@@ -1,19 +1,19 @@
 #pragma once
 
-#include <test_framework/matchers/specializations/matcher_base.hpp>
+#include <test_framework/matchers/matcher_base.hpp>
 
 #include <string>
 #include <string_view>
 #include <concepts>
 
-namespace test_framework::matchers::specialization
+namespace test_framework::matchers
 {
     template <typename T>
     concept string =
         std::same_as<T, std::string> || std::same_as<T, std::wstring> || std::same_as<T, std::string_view> || std::same_as<T, std::wstring_view>;
 
     template <string T>
-    struct matcher<T> : public matcher_base<T>
+    struct matcher<T>
     {
         T& s;
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <test_framework/matchers/specializations/matcher_base.hpp>
+#include <test_framework/matchers/matcher_base.hpp>
 
 #include <cstddef>
 #include <concepts>
@@ -8,10 +8,10 @@
 #include <bit>
 #include <limits>
 
-namespace test_framework::matchers::specialization
+namespace test_framework::matchers
 {
     template <std::integral T>
-    struct matcher<T> : public matcher_base<T>
+    struct matcher<T>
     {
         using limits = std::numeric_limits<T>;
 
