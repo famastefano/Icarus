@@ -1,0 +1,64 @@
+{
+    // Task configuration for VS Code
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "bootstrap",
+            "type": "shell",
+            "command": "${workspaceFolder}/bootstrap.bat",
+            "windows": {
+                "command": "${workspaceFolder}\\bootstrap.bat"
+            },
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "clear": true
+            }
+        },
+        {
+            "label": "run tests",
+            "type": "shell",
+            "command": "pwsh",
+            "args": [
+                "-ExecutionPolicy", "Bypass",
+                "-File", "${workspaceFolder}\\run-tests.ps1",
+                "-TestName", "${input:testType}"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "dependsOn": "bootstrap",
+            "problemMatcher": [],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "new",
+                "clear": true
+            }
+        }
+    ],
+    "inputs": [
+        {
+            "id": "testType",
+            "description": "Select test type to run",
+            "type": "pickString",
+            "options": [
+                "Test Framework",
+                "All Tests"
+            ],
+            "default": "Test Framework"
+        }
+    ]
+}
