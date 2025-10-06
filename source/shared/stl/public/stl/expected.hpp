@@ -3,6 +3,7 @@
 #include <concepts>
 #include <utility>
 #include <algorithm>
+#include <functional>
 
 namespace stl
 {
@@ -120,36 +121,22 @@ namespace stl
             return _storage.has_value();
         }
 
-        constexpr decltype(auto) value() &
-        {
-            return _storage.get_expected();
-        }
-        constexpr decltype(auto) value() const &
-        {
-            return _storage.get_expected();
-        }
-        constexpr decltype(auto) value() &&
-        {
-            return _storage.get_expected();
-        }
-        constexpr decltype(auto) value() const &&
+        constexpr decltype(auto) value()
         {
             return _storage.get_expected();
         }
 
-        constexpr decltype(auto) error() &
+        constexpr decltype(auto) value() const
+        {
+            return _storage.get_expected();
+        }
+
+        constexpr decltype(auto) error()
         {
             return _storage.get_unexpected();
         }
-        constexpr decltype(auto) error() const &
-        {
-            return _storage.get_unexpected();
-        }
-        constexpr decltype(auto) error() &&
-        {
-            return _storage.get_unexpected();
-        }
-        constexpr decltype(auto) error() const &&
+
+        constexpr decltype(auto) error() const
         {
             return _storage.get_unexpected();
         }
@@ -176,6 +163,57 @@ namespace stl
         constexpr E error_or(U &&default_value) &&
         {
             return !has_value() ? error() : std::forward<U>(default_value);
+        }
+
+        template <typename F>
+        constexpr decltype(auto) and_then(F &&f)
+        {
+            if constexpr (std::is_void_v<T>)
+            {
+                if (has_value())
+                    return f();
+            }
+            else
+            {
+                if (has_value())
+                    return std::invoke(std::forward<F>(f), value());
+            }
+            return *this;
+        }
+
+        template <typename F>
+        constexpr decltype(auto) or_else(F &&f)
+        {
+            if (!has_value())
+                return std::invoke(std::forward<F>(f), error());
+            return *this;
+        }
+
+        template <typename F>
+        constexpr decltype(auto) transform(F &&f)
+        {
+            if constexpr (std::is_void_v<T>)
+            {
+                using value_t = std::invoke_result_t<F>;
+                if (has_value())
+                    return stl::expected<value_t, E>{f()};
+            }
+            else
+            {
+                using value_t = std::invoke_result_t<F, decltype(value())>;
+                if (has_value())
+                    return stl::expected<value_t, E>{std::invoke(std::forward<F>(f), value())};
+            }
+            return *this;
+        }
+
+        template <typename F>
+        constexpr decltype(auto) transform_error(F &&f)
+        {
+            using value_t = std::invoke_result_t<F, decltype(error())>;
+            if (!has_value())
+                return stl::expected<value_t, E>{std::invoke(std::forward<F>(f), error())};
+            return *this;
         }
 
     private:
