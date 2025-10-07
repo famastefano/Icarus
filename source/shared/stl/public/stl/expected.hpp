@@ -4,6 +4,7 @@
 #include <utility>
 #include <algorithm>
 #include <functional>
+#include <stdexcept>
 
 namespace stl
 {
@@ -32,7 +33,6 @@ namespace stl
     public:
         using value_type = T;
         using error_type = E;
-        using unexpected_type = unexpected<E>;
 
         constexpr expected() : expected(std::in_place)
         {
@@ -46,7 +46,7 @@ namespace stl
         {
         }
 
-        template <typename U>
+        template <typename U, typename = std::enable_if_t<!std::same_as<std::remove_cvref_t<U>, expected>>>
         constexpr expected(U &&u)
         {
             if constexpr (std::constructible_from<T, U>)
@@ -166,7 +166,7 @@ namespace stl
         }
 
         template <typename F>
-        constexpr decltype(auto) and_then(F &&f)
+        constexpr auto and_then(F &&f)
         {
             if constexpr (std::is_void_v<T>)
             {
@@ -178,19 +178,19 @@ namespace stl
                 if (has_value())
                     return std::invoke(std::forward<F>(f), value());
             }
-            return *this;
+            return stl::expected(*this);
         }
 
         template <typename F>
-        constexpr decltype(auto) or_else(F &&f)
+        constexpr auto or_else(F &&f)
         {
             if (!has_value())
                 return std::invoke(std::forward<F>(f), error());
-            return *this;
+            return stl::expected(*this);
         }
 
         template <typename F>
-        constexpr decltype(auto) transform(F &&f)
+        constexpr auto transform(F &&f)
         {
             if constexpr (std::is_void_v<T>)
             {
@@ -204,16 +204,16 @@ namespace stl
                 if (has_value())
                     return stl::expected<value_t, E>{std::invoke(std::forward<F>(f), value())};
             }
-            return *this;
+            return stl::expected(*this);
         }
 
         template <typename F>
-        constexpr decltype(auto) transform_error(F &&f)
+        constexpr auto transform_error(F &&f)
         {
             using value_t = std::invoke_result_t<F, decltype(error())>;
             if (!has_value())
                 return stl::expected<value_t, E>{std::invoke(std::forward<F>(f), error())};
-            return *this;
+            return stl::expected(*this);
         }
 
     private:
@@ -303,6 +303,7 @@ namespace stl
             template <typename... Args>
             constexpr void construct_expected(Args &&...args) noexcept(std::is_nothrow_constructible_v<T, Args...>)
             {
+                clear();
                 static_assert(std::is_constructible_v<T, Args...>);
                 new (_mem) T(std::forward<Args>(args)...);
                 _has_value = true;
@@ -311,6 +312,7 @@ namespace stl
             template <typename... Args>
             constexpr void construct_unexpected(Args &&...args) noexcept(std::is_nothrow_constructible_v<E, Args...>)
             {
+                clear();
                 static_assert(std::is_constructible_v<E, Args...>);
                 new (_mem) E(std::forward<Args>(args)...);
                 _has_error = true;
@@ -330,42 +332,42 @@ namespace stl
             {
                 if (!_has_value)
                     throw std::logic_error{"No expected type has been constructed."};
-                return *std::bit_cast<T *>((void *)_mem);
+                return *std::launder(reinterpret_cast<T *>(_mem));
             }
 
             constexpr E &get_unexpected() &
             {
                 if (!_has_error)
                     throw std::logic_error{"No unexpected type has been constructed."};
-                return *std::bit_cast<E *>((void *)_mem);
+                return *std::launder(reinterpret_cast<E *>(_mem));
             }
 
             constexpr T const &get_expected() const &
             {
                 if (!_has_value)
                     throw std::logic_error{"No expected type has been constructed."};
-                return *std::bit_cast<T const *>((void *)_mem);
+                return *std::launder(reinterpret_cast<T const *>(_mem));
             }
 
             constexpr E const &get_unexpected() const &
             {
                 if (!_has_error)
                     throw std::logic_error{"No unexpected type has been constructed."};
-                return *std::bit_cast<E const *>((void *)_mem);
+                return *std::launder(reinterpret_cast<E const *>(_mem));
             }
 
             constexpr T &&get_expected() &&
             {
                 if (!_has_value)
                     throw std::logic_error{"No expected type has been constructed."};
-                return std::move(*std::bit_cast<T const *>((void *)_mem));
+                return *std::launder(reinterpret_cast<T *>(_mem));
             }
 
             constexpr E &&get_unexpected() &&
             {
                 if (!_has_error)
                     throw std::logic_error{"No unexpected type has been constructed."};
-                return std::move(*std::bit_cast<E const *>((void *)_mem));
+                return *std::launder(reinterpret_cast<E *>(_mem));
             }
         };
 
@@ -437,11 +439,13 @@ namespace stl
             template <typename... Args>
             constexpr void construct_expected(Args &&...args)
             {
+                clear();
             }
 
             template <typename... Args>
             constexpr void construct_unexpected(Args &&...args) noexcept(std::is_nothrow_constructible_v<E, Args...>)
             {
+                clear();
                 static_assert(std::is_constructible_v<E, Args...>);
                 new (_mem) E(std::forward<Args>(args)...);
                 _has_error = true;
@@ -466,21 +470,21 @@ namespace stl
             {
                 if (!_has_error)
                     throw std::logic_error{"No unexpected type has been constructed."};
-                return *std::bit_cast<E *>((void *)_mem);
+                return *std::launder(reinterpret_cast<E *>(_mem));
             }
 
             constexpr E const &get_unexpected() const &
             {
                 if (!_has_error)
                     throw std::logic_error{"No unexpected type has been constructed."};
-                return *std::bit_cast<E const *>((void *)_mem);
+                return *std::launder(reinterpret_cast<E const *>(_mem));
             }
 
             constexpr E &&get_unexpected() &&
             {
                 if (!_has_error)
                     throw std::logic_error{"No unexpected type has been constructed."};
-                return std::move(*std::bit_cast<E *>((void *)_mem));
+                return *std::launder(reinterpret_cast<E *>(_mem));
             }
         };
     }
