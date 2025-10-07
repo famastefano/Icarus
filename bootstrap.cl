@@ -1,1 +1,1 @@
-/Od /arch:AVX /EHsc /GR- /Fo: "build/bootstrap/obj/" /std:c++20 /Zc:__cplusplus /Zc:enumTypes /Zc:preprocessor /Zc:templateScope /nologo /utf-8 /diagnostics:caret /W4 /MTd /Zi /Fd: "build/bootstrap/exe/"
+/MP /Od /arch:AVX /EHsc /GR- /std:c++20 /Zc:__cplusplus /Zc:enumTypes /Zc:preprocessor /Zc:templateScope /nologo /utf-8 /diagnostics:caret /W4 /MTd /Zi /Fd: "build/bootstrap/exe/"
